@@ -1,0 +1,28 @@
+name: kuttl-tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  kuttl:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up KUTTL
+        run: |
+          curl -sSLo kuttl https://github.com/kudobuilder/kuttl/releases/latest/download/kuttl-linux-amd64
+          chmod +x kuttl
+          sudo mv kuttl /usr/local/bin/
+          kuttl version
+
+      - name: Set up KinD cluster
+        uses: helm/kind-action@v1.8.0
+
+      - name: Run KUTTL tests
+        run: |
+          kuttl test --config tests/kuttl-test.yaml

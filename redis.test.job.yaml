@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: redis-test-job
+spec:
+  template:
+    spec:
+      containers:
+      - name: redis-test
+        image: redis:5.0
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            set -e
+            redis-cli -h redis set testkey testvalue
+            VALUE=$(redis-cli -h redis get testkey)
+            if [ "$VALUE" = "testvalue" ]; then
+              echo "Redis test passed: $VALUE"
+              exit 0
+            else
+              echo "Redis test failed: $VALUE"
+              exit 1
+            fi
+      restartPolicy: Never
+  backoffLimit: 2
