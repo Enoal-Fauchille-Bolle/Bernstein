@@ -4,6 +4,7 @@ metadata:
   name: redis
   labels:
     app: redis
+  namespace: default
 spec:
   replicas: 1
   selector:
@@ -19,6 +20,17 @@ spec:
         image: redis:5.0
         ports:
         - containerPort: 6379
+        env:
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: redis-secret
+              key: REDIS_PASSWORD
+        - name: REDIS_EXTRA_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: redis-config
+              key: REDIS_EXTRA_ENV
         volumeMounts:
         - name: redis-config
           mountPath: /usr/local/etc/redis/redis.conf

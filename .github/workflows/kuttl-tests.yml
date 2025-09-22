@@ -20,7 +20,7 @@ jobs:
           sudo mv kuttl /usr/local/bin/
           kuttl version
 
-      - name: Set up KinD cluster
+      - name: Set up Kind cluster
         uses: helm/kind-action@v1.8.0
 
       - name: Run KUTTL tests
