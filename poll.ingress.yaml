@@ -20,6 +20,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: test
+            name: poll
             port:
               number: 80
