@@ -20,27 +20,4 @@ spec:
         image: redis:5.0
         ports:
         - containerPort: 6379
-        env:
-        - name: REDIS_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: redis-secret
-              key: REDIS_PASSWORD
-        - name: REDIS_EXTRA_ENV
-          valueFrom:
-            configMapKeyRef:
-              name: redis-config
-              key: REDIS_EXTRA_ENV
-        volumeMounts:
-        - name: redis-config
-          mountPath: /usr/local/etc/redis/redis.conf
-          subPath: redis.conf
-        command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
       restartPolicy: Always
-      volumes:
-      - name: redis-config
-        configMap:
-          name: redis-config
-          items:
-          - key: redis.conf
-            path: redis.conf

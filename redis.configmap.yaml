@@ -6,4 +6,4 @@ metadata:
     app: redis
   namespace: default
 data:
-  redis.conf: |
+  REDIS_HOST: redis-service
