@@ -6,20 +6,16 @@ metadata:
     app: poll
   namespace: default
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
+    traefik.ingress.kubernetes.io/router.entrypoints: web
 spec:
-  ingressClassName: nginx-example #traefik here ?
   rules:
-  - http:
-      paths:
-      - path: /testpath # "A list of paths, each of which has an associated
-#backend defined with a service.name and a service.port.name or
-# service.port.number. Both the host and path must match the content of an
-# incoming request before the load balancer directs traffic to the referenced
-#Service."
-        pathType: Prefix
-        backend:
-          service:
-            name: poll
-            port:
-              number: 80
+    - host: poll.dop.io
+      http:
+        paths:
+          - path: /
+            pathType: Exact
+            backend:
+              service:
+                name:  poll-service
+                port:
+                  number: 80
