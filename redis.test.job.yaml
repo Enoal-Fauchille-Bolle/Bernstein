@@ -1,0 +1,35 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: redis-test-job
+spec:
+  template:
+    spec:
+      containers:
+      - name: redis-test
+        image: redis:5.0
+        env:
+        - name: REDIS_HOST
+          value: redis-service
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            set -e
+            for i in $(seq 1 30); do
+              if redis-cli -h "$REDIS_HOST" ping > /dev/null 2>&1; then
+                break
+              fi
+              echo "Waiting for Redis at $REDIS_HOST:6379..."
+              sleep 2
+            done
+            redis-cli -h "$REDIS_HOST" set testkey testvalue
+            VALUE=$(redis-cli -h "$REDIS_HOST" get testkey)
+            if [ "$VALUE" = "testvalue" ]; then
+              echo "Redis test passed: $VALUE"
+              exit 0
+            else
+              echo "Redis test failed: $VALUE"
+              exit 1
+            fi
+      restartPolicy: Never
+  backoffLimit: 2

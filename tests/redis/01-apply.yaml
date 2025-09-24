@@ -1,0 +1,7 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestStep
+apply:
+  - ../../redis.configmap.yaml
+  - ../../redis.deployment.yaml
+  - ../../redis.service.yaml
+  - ../../redis.test.job.yaml
