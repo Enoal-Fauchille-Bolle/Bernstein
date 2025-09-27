@@ -16,6 +16,6 @@ spec:
             pathType: Exact
             backend:
               service:
-                name:  poll-service
+                name: poll-service
                 port:
                   number: 80

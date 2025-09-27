@@ -19,11 +19,11 @@ spec:
         - name: poll
           image: epitechcontent/t-dop-600-poll:k8s
           ports:
-          - containerPort: 80
+            - containerPort: 80
           resources:
             limits:
               memory: "128M"
           envFrom:
-          - configMapRef:
+            - configMapRef:
                 name: redis-config
       restartPolicy: Always

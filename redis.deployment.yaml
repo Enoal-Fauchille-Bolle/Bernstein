@@ -16,8 +16,8 @@ spec:
         app: redis
     spec:
       containers:
-      - name: redis
-        image: redis:5.0
-        ports:
-        - containerPort: 6379
+        - name: redis
+          image: redis:5.0
+          ports:
+            - containerPort: 6379
       restartPolicy: Always
