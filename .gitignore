@@ -1,0 +1,64 @@
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# IDE/Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.vim/
+.netrwhist
+
+# Kubernetes sensitive files
+*.key
+*.crt
+*.pem
+kubeconfig
+.kube/config
+
+# Environment and secrets (if you create local test files)
+.env
+.env.local
+.env.*.local
+secrets/
+*.secret
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+.tmp/
+
+# Logs
+*.log
+logs/
+
+# Dependencies (if you add any tooling)
+node_modules/
+vendor/
+
+# Build artifacts (if you create any)
+dist/
+build/
+target/
+
+# Backup files
+*.bak
+*.backup
+
+# Documentation builds
+docs/_build/
