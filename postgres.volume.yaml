@@ -9,7 +9,7 @@ spec:
     storage: 5Gi
   accessModes:
     - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Delete
+  persistentVolumeReclaimPolicy: Retain
   storageClassName: manual
   hostPath:
     path: /var/lib/postgresql-k8s
