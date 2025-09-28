@@ -15,6 +15,18 @@ spec:
       labels:
         app: poll
     spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - poll
+                topologyKey: kubernetes.io/hostname
       containers:
         - name: poll
           image: epitechcontent/t-dop-600-poll:k8s
