@@ -6,10 +6,15 @@ A Kubernetes-based voting application with PostgreSQL as persistent storage and 
 
 - [Architecture](#architecture)
 - [PostgreSQL Configuration](#postgresql-configuration)
-  - [Components](#components)
-  - [Deployment](#deployment)
-  - [Security Features](#security-features)
-  - [Environment Variables](#environment-variables)
+  - [PostgreSQL Components](#postgresql-components)
+  - [PostgreSQL Deployment](#postgresql-deployment)
+  - [PostgreSQL Security Features](#postgresql-security-features)
+  - [PostgreSQL Environment Variables](#postgresql-environment-variables)
+- [Redis Configuration](#redis-configuration)
+  - [Redis Components](#redis-components)
+  - [Redis Deployment](#redis-deployment)
+  - [Redis Security Features](#redis-security-features)
+  - [Redis Environment Variables](#redis-environment-variables)
 - [Project Requirements](#project-requirements)
 
 ## Architecture
@@ -26,7 +31,7 @@ The Bernstein application consists of:
 
 ## PostgreSQL Configuration
 
-### Components
+### PostgreSQL Components
 
 The PostgreSQL deployment consists of five main Kubernetes resources:
 
@@ -58,7 +63,7 @@ The PostgreSQL deployment consists of five main Kubernetes resources:
    - Port: 5432
    - Not exposed via Traefik (secure internal access)
 
-### Deployment
+### PostgreSQL Deployment
 
 To deploy the PostgreSQL components:
 
@@ -76,14 +81,14 @@ kubectl get svc postgres-service
 kubectl get pvc postgres-pvc
 ```
 
-### Security Features
+### PostgreSQL Security Features
 
 - Credentials stored securely in Kubernetes Secret with base64 encoding
 - Database only accessible via internal ClusterIP service
 - No external exposure through Traefik ingress
 - Persistent data storage with proper volume management
 
-### Environment Variables
+### PostgreSQL Environment Variables
 
 The PostgreSQL container uses the following environment variables:
 
@@ -96,9 +101,70 @@ These variables are automatically referenced by other services in the cluster us
 - Host: `postgres-service` (from postgres-config)
 - Port: `5432` (from postgres-config)
 
+## Redis Configuration
+
+### Redis Components
+
+The Redis deployment consists of three main Kubernetes resources:
+
+1. **redis.configmap.yaml**: Contains configuration data
+   - `REDIS_HOST`: Service hostname (redis-service)
+
+2. **redis.deployment.yaml**: Main deployment configuration
+   - Image: `redis:5.0`
+   - Namespace: `default`
+   - Restart policy: `Always`
+   - Replicas: 1 (single instance)
+   - Port: 6379
+   - No persistent storage (in-memory cache)
+
+3. **redis.service.yaml**: Internal service exposure
+   - Type: `ClusterIP` (internal access only)
+   - Port: 6379
+   - Not exposed via Traefik (secure internal access)
+
+### Redis Deployment
+
+To deploy the Redis components:
+
+```bash
+# Apply all Redis resources
+kubectl apply -f redis.configmap.yaml
+kubectl apply -f redis.deployment.yaml
+kubectl apply -f redis.service.yaml
+
+# Verify deployment
+kubectl get pods -l app=redis
+kubectl get svc redis-service
+
+# Optional: Test Redis connectivity
+kubectl apply -f redis.test.job.yaml
+kubectl logs job/redis-test-job
+```
+
+### Redis Security Features
+
+- Redis only accessible via internal ClusterIP service
+- No external exposure through Traefik ingress
+- Runs in default namespace with appropriate labels
+- No authentication required for internal cluster communication
+
+### Redis Environment Variables
+
+The Redis service uses the following configuration:
+
+- `REDIS_HOST`: From redis-config (value: `redis-service`)
+
+Other services can connect to Redis using:
+
+- Host: `redis-service` (from redis-config)
+- Port: `6379` (default Redis port)
+
 ## Project Requirements
 
 This configuration follows the Bernstein project specifications:
+
+### PostgreSQL Requirements
 
 - ✅ Uses `postgres:12` image
 - ✅ Runs in `default` namespace
@@ -108,4 +174,16 @@ This configuration follows the Bernstein project specifications:
 - ✅ Persistent volume mounted at `/var/lib/postgresql/data`
 - ✅ Credentials in Secret, other config in ConfigMap
 - ✅ Internal ClusterIP service only
+- ✅ Compatible with automated testing
+
+### Redis Requirements
+
+- ✅ Uses `redis:5.0` image
+- ✅ Runs in `default` namespace
+- ✅ Always restart policy
+- ✅ Single instance (not replicated)
+- ✅ Exposes port 6379
+- ✅ Configuration in ConfigMap
+- ✅ Internal ClusterIP service only
+- ✅ Not exposed via Traefik
 - ✅ Compatible with automated testing
