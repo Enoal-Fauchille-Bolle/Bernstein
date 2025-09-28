@@ -15,6 +15,11 @@ A Kubernetes-based voting application with PostgreSQL as persistent storage and 
   - [Redis Deployment](#redis-deployment)
   - [Redis Security Features](#redis-security-features)
   - [Redis Environment Variables](#redis-environment-variables)
+- [Poll Configuration](#poll-configuration)
+  - [Poll Components](#poll-components)
+  - [Poll Deployment](#poll-deployment)
+  - [Poll High Availability](#poll-high-availability)
+  - [Poll External Access](#poll-external-access)
 - [Project Requirements](#project-requirements)
 
 ## Architecture
@@ -160,6 +165,68 @@ Other services can connect to Redis using:
 - Host: `redis-service` (from redis-config)
 - Port: `6379` (default Redis port)
 
+## Poll Configuration
+
+### Poll Components
+
+The Poll deployment consists of three main Kubernetes resources:
+
+1. **poll.deployment.yaml**: Main deployment configuration
+   - Image: `epitechcontent/t-dop-600-poll:k8s`
+   - Namespace: `default`
+   - Restart policy: `Always`
+   - Replicas: 2 (high availability)
+   - Port: 80
+   - Memory limit: 128M
+   - Environment variables from Redis ConfigMap
+   - Pod anti-affinity rules for node distribution
+
+2. **poll.service.yaml**: Internal service exposure
+   - Type: `ClusterIP` (internal access)
+   - Port: 80
+   - Selector: `app=poll`
+
+3. **poll.ingress.yaml**: External access configuration
+   - Host: `poll.dop.io`
+   - Traefik integration for external routing
+   - HTTP path: `/` (root path)
+
+### Poll Deployment
+
+To deploy the Poll components:
+
+```bash
+# Apply all Poll resources
+kubectl apply -f poll.deployment.yaml
+kubectl apply -f poll.service.yaml
+kubectl apply -f poll.ingress.yaml
+
+# Verify deployment
+kubectl get pods -l app=poll
+kubectl get svc poll-service
+kubectl get ingress poll-ingress
+
+# Check pod distribution across nodes
+kubectl get pods -l app=poll -o wide
+```
+
+### Poll High Availability
+
+The Poll service implements high availability through:
+
+- **2 Replicas**: Multiple instances for redundancy
+- **Pod Anti-Affinity**: Ensures pods are scheduled on different nodes using `preferredDuringSchedulingIgnoredDuringExecution` with topology key `kubernetes.io/hostname`
+- **Always Restart Policy**: Automatic recovery from failures
+- **Memory Limits**: Resource constraints prevent resource exhaustion
+
+### Poll External Access
+
+The Poll service is accessible externally through:
+
+- **Traefik Ingress**: Routes external traffic from `poll.dop.io` to the internal service
+- **ClusterIP Service**: Internal load balancing between pod replicas
+- **Port 80**: Standard HTTP port for web access
+
 ## Project Requirements
 
 This configuration follows the Bernstein project specifications:
@@ -186,4 +253,19 @@ This configuration follows the Bernstein project specifications:
 - ✅ Configuration in ConfigMap
 - ✅ Internal ClusterIP service only
 - ✅ Not exposed via Traefik
+- ✅ Compatible with automated testing
+
+### Poll Requirements
+
+- ✅ Uses `epitechcontent/t-dop-600-poll:k8s` image
+- ✅ Runs in `default` namespace
+- ✅ Always restart policy
+- ✅ 2 replicas for high availability
+- ✅ Exposes port 80
+- ✅ Memory limit: 128M
+- ✅ Environment variables from Redis ConfigMap
+- ✅ Pod anti-affinity for node distribution
+- ✅ Internal ClusterIP service
+- ✅ External access via Traefik ingress
+- ✅ Host: `poll.dop.io`
 - ✅ Compatible with automated testing
