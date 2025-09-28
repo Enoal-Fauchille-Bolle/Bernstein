@@ -21,6 +21,11 @@ A Kubernetes-based voting application with PostgreSQL as persistent storage and 
   - [Poll Deployment](#poll-deployment)
   - [Poll High Availability](#poll-high-availability)
   - [Poll External Access](#poll-external-access)
+- [Traefik Configuration](#traefik-configuration)
+  - [Traefik Components](#traefik-components)
+  - [Traefik Deployment](#traefik-deployment)
+  - [Traefik High Availability](#traefik-high-availability)
+  - [Traefik External Access](#traefik-external-access)
 - [Project Requirements](#project-requirements)
 
 ## Architecture
@@ -32,6 +37,7 @@ The Bernstein application consists of:
 - **Poll**: Frontend service for voting interface
 - **Worker**: Backend service for processing votes
 - **Result**: Service for displaying voting results
+- **Traefik**: Reverse proxy and load balancer for external access
 
 ![Architecture Schema](./assets/application-schema.png)
 
@@ -319,6 +325,74 @@ The Poll service is accessible externally through:
 - **ClusterIP Service**: Internal load balancing between pod replicas
 - **Port 80**: Standard HTTP port for web access
 
+## Traefik Configuration
+
+### Traefik Components
+
+The Traefik deployment consists of three main Kubernetes resources:
+
+1. **traefik.rbac.yaml**: Defines RBAC permissions for Kubernetes API access
+   - ServiceAccount: `traefik-service-account` in `kube-public` namespace
+   - ClusterRole: Permissions to read services, endpoints, secrets, and ingresses
+   - ClusterRoleBinding: Links service account to cluster role
+
+2. **traefik.deployment.yaml**: Main deployment configuration
+   - Image: `traefik:3.1`
+   - Namespace: `kube-public`
+   - Restart policy: `Always`
+   - Replicas: 2 (high availability)
+   - Ports: 80 (HTTP proxy), 8080 (admin dashboard)
+   - Pod anti-affinity rules for node distribution
+   - Health checks with liveness and readiness probes
+
+3. **traefik.service.yaml**: External service exposure
+   - Type: `NodePort` (external access)
+   - Port 80 → NodePort 30021 (HTTP proxy)
+   - Port 8080 → NodePort 30042 (admin dashboard)
+
+### Traefik Deployment
+
+To deploy the Traefik components:
+
+```bash
+# Apply all Traefik resources
+kubectl apply -f traefik.rbac.yaml
+kubectl apply -f traefik.deployment.yaml
+kubectl apply -f traefik.service.yaml
+
+# Verify deployment
+kubectl get pods -l app=traefik -n kube-public
+kubectl get svc traefik-service -n kube-public
+kubectl get serviceaccount traefik-service-account -n kube-public
+
+# Check pod distribution across nodes
+kubectl get pods -l app=traefik -n kube-public -o wide
+```
+
+### Traefik High Availability
+
+The Traefik service implements high availability through:
+
+- **2 Replicas**: Multiple instances for redundancy and load distribution
+- **Pod Anti-Affinity**: Ensures pods are scheduled on different nodes using `preferredDuringSchedulingIgnoredDuringExecution` with topology key `kubernetes.io/hostname`
+- **Always Restart Policy**: Automatic recovery from failures
+- **Health Checks**: Liveness and readiness probes ensure only healthy pods receive traffic
+
+### Traefik External Access
+
+The Traefik service is accessible through:
+
+- **HTTP Proxy**: External access via NodePort 30021 for routing to applications
+- **Admin Dashboard**: External access via NodePort 30042 for monitoring and configuration
+- **Ingress Controller**: Automatically discovers and routes traffic to ingress resources
+- **Load Balancing**: Distributes traffic across multiple application instances
+
+Access URLs:
+
+- Poll application: `http://poll.dop.io:30021`
+- Result application: `http://result.dop.io:30021`
+- Traefik dashboard: `http://localhost:30042`
+
 ## Project Requirements
 
 This configuration follows the Bernstein project specifications:
@@ -360,4 +434,16 @@ This configuration follows the Bernstein project specifications:
 - ✅ Internal ClusterIP service
 - ✅ External access via Traefik ingress
 - ✅ Host: `poll.dop.io`
-- ✅ Compatible with automated testing
+
+### Traefik Requirements
+
+- ✅ Uses `traefik:3.1` image
+- ✅ Runs in `kube-public` namespace
+- ✅ Always restart policy
+- ✅ 2 replicas for high availability
+- ✅ Exposes ports 80 (HTTP proxy) and 8080 (admin dashboard)
+- ✅ NodePort service exposing port 30021 (HTTP) and 30042 (dashboard)
+- ✅ RBAC permissions for Kubernetes API access
+- ✅ Pod anti-affinity for node distribution
+- ✅ Health checks with liveness and readiness probes
+- ✅ Ingress controller functionality
