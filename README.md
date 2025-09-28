@@ -333,7 +333,6 @@ This configuration follows the Bernstein project specifications:
 - ✅ Persistent volume mounted at `/var/lib/postgresql/data`
 - ✅ Credentials in Secret, other config in ConfigMap
 - ✅ Internal ClusterIP service only
-- ✅ Compatible with automated testing
 
 ### Redis Requirements
 
@@ -345,7 +344,6 @@ This configuration follows the Bernstein project specifications:
 - ✅ Configuration in ConfigMap
 - ✅ Internal ClusterIP service only
 - ✅ Not exposed via Traefik
-- ✅ Compatible with automated testing
 
 ### Poll Requirements
 
@@ -360,4 +358,3 @@ This configuration follows the Bernstein project specifications:
 - ✅ Internal ClusterIP service
 - ✅ External access via Traefik ingress
 - ✅ Host: `poll.dop.io`
-- ✅ Compatible with automated testing
