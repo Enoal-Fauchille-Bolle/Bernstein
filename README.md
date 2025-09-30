@@ -5,6 +5,7 @@ A Kubernetes-based voting application with PostgreSQL as persistent storage and 
 ## Table of Contents
 
 - [Architecture](#architecture)
+- [Getting Started](#getting-started)
 - [PostgreSQL Configuration](#postgresql-configuration)
   - [PostgreSQL Components](#postgresql-components)
   - [PostgreSQL Deployment](#postgresql-deployment)
@@ -38,6 +39,97 @@ The Bernstein application consists of:
 - **Result**: Service for displaying voting results
 
 ![Architecture Schema](./assets/application-schema.png)
+
+## Getting Started
+
+To deploy the Bernstein application on your Kubernetes cluster, follow these steps:
+
+Clone the repository:
+
+```bash
+git clone https://github.com/Enoal-Fauchille-Bolle/Bernstein.git
+cd Bernstein
+```
+
+Deploy Cadvisor for monitoring:
+
+```bash
+kubectl apply -f postgres.cadvisor.yaml
+```
+
+Deploy the PostgreSQL components:
+
+```bash
+kubectl apply -f postgres.secret.yaml
+kubectl apply -f postgres.configmap.yaml
+kubectl apply -f postgres.volume.yaml
+kubectl apply -f postgres.deployment.yaml
+kubectl apply -f postgres.service.yaml
+```
+
+Deploy the Redis components:
+
+```bash
+kubectl apply -f redis.configmap.yaml
+kubectl apply -f redis.deployment.yaml
+kubectl apply -f redis.service.yaml
+```
+
+Deploy the poll components:
+
+```bash
+kubectl apply -f poll.deployment.yaml
+kubectl apply -f poll.service.yaml
+kubectl apply -f poll.ingress.yaml
+```
+
+Deploy the worker components:
+
+```bash
+kubectl apply -f worker.deployment.yaml
+```
+
+Deploy the result components:
+
+```bash
+kubectl apply -f result.deployment.yaml
+kubectl apply -f result.service.yaml
+kubectl apply -f result.ingress.yaml
+```
+
+Deploy the Traefik components:
+
+```bash
+kubectl apply -f traefik.rbac.yaml
+kubectl apply -f traefik.deployment.yaml
+kubectl apply -f traefik.service.yaml
+```
+
+Create database manually after first deployment:
+
+```bash
+# Getting your <postgres-deployment-id>
+kubectl get pods -l app=postgres -o jsonpath='{.items[0].metadata.name}'
+
+# Getting your <postgres-container-name>
+kubectl get pods -l app=postgres -o jsonpath='{.items[0].spec.containers[0].name}'
+
+# <username> is the value of POSTGRES_USER in postgres.secret.yaml (base64 decoded)
+
+echo "CREATE TABLE votes \
+    (id text PRIMARY KEY, vote text NOT NULL);" \
+    | kubectl exec -i <postgres-deployment-id> -c <postgres-container-name> \
+    -- psql -U <username>
+```
+
+Adds 2 fake DNS to /etc/hosts
+
+```bash
+echo "$(kubectl get nodes -o \
+    jsonpath='{ $.items[*].status.addresses[?(@.type=="ExternalIP")].address }') \
+    poll.dop.io result.dop.io" \
+    | sudo tee -a /etc/hosts
+```
 
 ## PostgreSQL Configuration
 
@@ -308,7 +400,6 @@ This configuration follows the Bernstein project specifications:
 - ✅ Persistent volume mounted at `/var/lib/postgresql/data`
 - ✅ Credentials in Secret, other config in ConfigMap
 - ✅ Internal ClusterIP service only
-- ✅ Compatible with automated testing
 
 ### Redis Requirements
 
@@ -320,7 +411,6 @@ This configuration follows the Bernstein project specifications:
 - ✅ Configuration in ConfigMap
 - ✅ Internal ClusterIP service only
 - ✅ Not exposed via Traefik
-- ✅ Compatible with automated testing
 
 ### Poll Requirements
 
@@ -351,3 +441,4 @@ This configuration follows the Bernstein project specifications:
 - ✅ External access via Traefik ingress
 - ✅ Host: `result.dop.io`
 - ✅ Compatible with automated testing
+
