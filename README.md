@@ -21,6 +21,11 @@ A Kubernetes-based voting application with PostgreSQL as persistent storage and 
   - [Poll Deployment](#poll-deployment)
   - [Poll High Availability](#poll-high-availability)
   - [Poll External Access](#poll-external-access)
+- [Result Configuration](#result-configuration)
+  - [Result Components](#result-components)
+  - [Result Deployment](#result-deployment)
+  - [Result High Availability](#result-high-availability)
+  - [Result External Access](#result-external-access)
 - [Project Requirements](#project-requirements)
 
 ## Architecture
@@ -319,6 +324,68 @@ The Poll service is accessible externally through:
 - **ClusterIP Service**: Internal load balancing between pod replicas
 - **Port 80**: Standard HTTP port for web access
 
+## Result Configuration
+
+### Result Components
+
+The Result deployment consists of three main Kubernetes resources:
+
+1. **result.deployment.yaml**: Main deployment configuration
+   - Image: `epitechcontent/t-dop-600-result:k8s`
+   - Namespace: `default`
+   - Restart policy: `Always`
+   - Replicas: 2 (high availability)
+   - Port: 80
+   - Memory limit: 128M
+   - Environment variables from PostgreSQL ConfigMap and Secret
+   - Pod anti-affinity rules for node distribution
+
+2. **result.service.yaml**: Internal service exposure
+   - Type: `ClusterIP` (internal access)
+   - Port: 80
+   - Selector: `app=result`
+
+3. **result.ingress.yaml**: External access configuration
+   - Host: `result.dop.io`
+   - Traefik integration for external routing
+   - HTTP path: `/` (root path)
+
+### Result Deployment
+
+To deploy the Result components:
+
+```bash
+# Apply all Result resources
+kubectl apply -f result.deployment.yaml
+kubectl apply -f result.service.yaml
+kubectl apply -f result.ingress.yaml
+
+# Verify deployment
+kubectl get pods -l app=result
+kubectl get svc result-service
+kubectl get ingress result-ingress
+
+# Check pod distribution across nodes
+kubectl get pods -l app=result -o wide
+```
+
+### Result High Availability
+
+The Result service implements high availability through:
+
+- **2 Replicas**: Multiple instances for redundancy
+- **Pod Anti-Affinity**: Ensures pods are scheduled on different nodes using `preferredDuringSchedulingIgnoredDuringExecution` with topology key `kubernetes.io/hostname`
+- **Always Restart Policy**: Automatic recovery from failures
+- **Memory Limits**: Resource constraints prevent resource exhaustion
+
+### Result External Access
+
+The Result service is accessible externally through:
+
+- **Traefik Ingress**: Routes external traffic from `result.dop.io` to the internal service
+- **ClusterIP Service**: Internal load balancing between pod replicas
+- **Port 80**: Standard HTTP port for web access
+
 ## Project Requirements
 
 This configuration follows the Bernstein project specifications:
@@ -358,3 +425,20 @@ This configuration follows the Bernstein project specifications:
 - ✅ Internal ClusterIP service
 - ✅ External access via Traefik ingress
 - ✅ Host: `poll.dop.io`
+- ✅ Compatible with automated testing
+
+### Result Requirements
+
+- ✅ Uses `epitechcontent/t-dop-600-result:k8s` image
+- ✅ Runs in `default` namespace
+- ✅ Always restart policy
+- ✅ 2 replicas for high availability
+- ✅ Exposes port 80
+- ✅ Memory limit: 128M
+- ✅ Environment variables from PostgreSQL ConfigMap and Secret
+- ✅ Pod anti-affinity for node distribution
+- ✅ Internal ClusterIP service
+- ✅ External access via Traefik ingress
+- ✅ Host: `result.dop.io`
+- ✅ Compatible with automated testing
+
