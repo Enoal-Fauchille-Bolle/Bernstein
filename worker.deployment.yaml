@@ -22,11 +22,10 @@ spec:
             limits:
               memory: "256M"
           envFrom:
-          - configMapRef:
-              name: redis-config
-          - configMapRef:
-              name: postgres-config
-          - secretRef:
-              name: postgres-secret
+            - configMapRef:
+                name: redis-config
+            - configMapRef:
+                name: postgres-config
+            - secretRef:
+                name: postgres-secret
       restartPolicy: Always
-
