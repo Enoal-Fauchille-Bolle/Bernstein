@@ -38,4 +38,6 @@ spec:
           envFrom:
             - configMapRef:
                 name: postgres-config
+            - secretRef:
+                name: postgres-secret
       restartPolicy: Always
