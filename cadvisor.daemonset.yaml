@@ -43,7 +43,7 @@ spec:
           readOnly: true
         - name: var-run
           mountPath: /var/run
-          readOnly: true
+          readOnly: false
         - name: sys
           mountPath: /sys
           readOnly: true
